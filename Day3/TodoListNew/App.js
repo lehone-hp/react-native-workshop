@@ -7,7 +7,17 @@
  */
 
 import React, {Component} from 'react';
-import {StyleSheet, ScrollView, ImageBackground, Text, View, TouchableOpacity, TextInput} from 'react-native';
+import {
+    ScrollView,
+    ImageBackground,
+    Text,
+    View,
+    TouchableOpacity,
+    TextInput,
+    Alert
+} from 'react-native';
+
+import styles from './src/styles/app.style';
 
 export default class App extends Component {
 
@@ -22,8 +32,9 @@ export default class App extends Component {
     componentDidMount() {
         this.setState({
             todoList: [
-                {title: 'Do something Today', done: false},
-                {title: 'Take your bath', done: true}
+                {title: 'Do morning meditation', done: true},
+                {title: 'Physical exercises, stretches, push up and drink 1ltr of water', done: false},
+                {title: 'Take your bath', done: false},
             ]
         });
     }
@@ -34,17 +45,17 @@ export default class App extends Component {
             let existingList = this.state.todoList;
             let newTodoItem = {title: todoText, done: false};
 
-            this.setState({todoList: [newTodoItem, ...existingList]});
+            this.setState({todoList: [...existingList, newTodoItem]});
             this.setState({newTodoItem: ''});
         } else {
-            alert('Please Provide the Todo item');
+            Alert.alert('Your todo can not be empty');
         }
     };
 
     removeTodoItem = (key) => {
         const todoItem = this.state.todoList[key];
         if (todoItem.done) {
-            alert('Cannot delete completed items');
+            Alert.alert('Cannot delete completed items');
         } else {
             let newList = this.state.todoList.filter(function (value, index, arr) {
                 return index !== key;
@@ -54,11 +65,39 @@ export default class App extends Component {
         }
     };
 
+    toggleTodoItem = (key) => {
+        const todoItem = this.state.todoList[key];
+
+        Alert.alert(
+            todoItem.title,
+            todoItem.done ?
+                'This task has already been completed, click OPEN to reopen the task'
+                : 'This task has not yet been completed, Click DONE to complete the task',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: todoItem.done ? 'OPEN' : 'DONE',
+                    onPress: () => {
+                        let existingList = this.state.todoList;
+                        todoItem.done = !todoItem.done;
+                        existingList[key] = todoItem;
+                        this.setState({todoList: existingList});
+                    }
+                },
+            ],
+            {cancelable: false},
+        );
+    };
+
     render() {
         return (
             <View style={ styles.container }>
                 {/*Todolist*/ }
-                <ScrollView>
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1 }}>
                     {/*Header*/ }
 
                     <ImageBackground source={ require('./assets/bg.jpg') }
@@ -68,11 +107,12 @@ export default class App extends Component {
                                 <Text style={ styles.headerText }>My TodoList</Text>
                             </View>
 
-                            <View style={ styles.todoListContainer }>
+                            <View style={styles.todoListContainer}>
                                 {
                                     this.state.todoList.length === 0 ?
                                         <View style={ styles.noListItemContainer }>
-                                            <Text style={ styles.noListItemHeader }>Your todo list is empty</Text>
+                                            <Text style={ styles.noListItemHeader }>Your todo list is empty.</Text>
+                                            <Text style={ styles.noListItemHeader }>Add a new item with the form below</Text>
                                         </View>
                                         :
                                         this.state.todoList.map((item, key) => {
@@ -80,14 +120,20 @@ export default class App extends Component {
                                                 <View key={ key } style={ styles.listItem }>
                                                     <View style={ styles.listItemContentContainer }>
                                                         <Text>{ item.title }</Text>
-                                                        <Text
-                                                            style={ styles.listItemStatus }>
-                                                            { item.done ?
-                                                                <Text style={{color: '#00cf00', textDecorationLine: 'line-through'}}>Completed</Text>
-                                                                :
-                                                                <Text style={{color: '#2551ff'}}>Pending</Text>
-                                                            }
-                                                        </Text>
+                                                        <TouchableOpacity
+                                                            onPress={ () => this.toggleTodoItem(key) }>
+                                                            <Text
+                                                                style={ styles.listItemStatus }>
+                                                                { item.done ?
+                                                                    <Text style={ {
+                                                                        color: '#00cf00',
+                                                                        textDecorationLine: 'line-through'
+                                                                    } }>Completed</Text>
+                                                                    :
+                                                                    <Text style={ {color: '#2551ff'} }>Pending</Text>
+                                                                }
+                                                            </Text>
+                                                        </TouchableOpacity>
                                                     </View>
                                                     <View style={ styles.listItemButtonContainer }>
                                                         <TouchableOpacity
@@ -126,85 +172,3 @@ export default class App extends Component {
     }
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    backgroundImage: {
-        width: '100%', height: '100%',
-    },
-    backgroundWatermark: {
-        backgroundColor: 'rgba(18, 50, 105, 0.64)',
-    },
-    headerContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 10,
-        borderWidth: 1,
-        borderColor: '#858585',
-    },
-    noListItemContainer: {
-        padding: 10
-    },
-    noListItemHeader: {
-        color: '#fff'
-    },
-    headerText: {
-        fontWeight: 'bold',
-        fontSize: 18,
-        color: '#fff',
-    },
-    todoListContainer: {
-        borderWidth: 1,
-        borderColor: '#858585',
-    },
-    listItem: {
-        flexDirection: 'row',
-        padding: 10,
-        borderWidth: 1,
-        borderColor: '#858585',
-        margin: 10,
-        backgroundColor: '#fff',
-    },
-    listItemContentContainer: {
-        flex: 4,
-        justifyContent: 'space-around',
-    },
-    listItemStatus: {
-        fontWeight: 'bold',
-    },
-    listItemButtonContainer: {
-        flex: 1,
-    },
-    listItemButtonButton: {
-        backgroundColor: 'red',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 17,
-    },
-    listItemButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 20,
-    },
-    addTodoContainer: {
-        flexDirection: 'row',
-        borderColor: '#858585',
-        borderTopWidth: 1,
-    },
-    addTodoTextInput: {
-        flex: 4,
-        paddingLeft: 10,
-    },
-    addTodoAddButton: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#616161',
-        padding: 10,
-    },
-    addTodoAddButtonText: {
-        color: '#fff',
-
-    }
-});
